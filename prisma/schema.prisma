@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  //output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+
+}
+
+// 1. הגדרת ה-Enums
+enum GameStatus {
+  Waiting
+  Live
+  Finished
+}
+
+enum Role {
+  Player
+  Manager
+}
+
+// 2. מודל משתמש (User)
+model User {
+  id           Int               @id @default(autoincrement())
+  name         String
+  
+  // קשר לטבלת המשתתפים
+  participants GameParticipant[] 
+}
+
+// 3. מודל משחק (Game)
+model Game {
+  id           Int               @id @default(autoincrement())
+  status       GameStatus        @default(Waiting)
+  
+  // קשר לטבלת המשתתפים
+  participants GameParticipant[] 
+}
+
+// 4. טבלת קשר למשתתפי המשחק (GameParticipant) - Many to Many
+model GameParticipant {
+  id      Int   @id @default(autoincrement())
+  userId  Int
+  gameId  Int
+  role    Role  @default(Player)
+  score   Int   @default(0)
+
+  // הגדרת הקשרים בפועל למודלים האחרים
+  user    User  @relation(fields: [userId], references: [id])
+  game    Game  @relation(fields: [gameId], references: [id])
+
+  //   אילוץ ברמת מסד הנתונים שמונע מאותו משתמש להירשם לאותו משחק פעמיים
+  @@unique([userId, gameId]) 
+}
